@@ -1,0 +1,36 @@
+services:
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+  api:
+    build:
+      context: ../../app
+      dockerfile: Dockerfile
+    command: uvicorn main:app --host 0.0.0.0 --port 8000
+    volumes:
+      - /storage/test:/mnt
+    ports:
+      - "8000:8000"
+    environment:
+      - REDIS_URL=redis://redis:6379/0
+      - OPENSEARCH_HOST=192.168.128.137
+      - OPENSEARCH_PORT=9200
+      - EVENT_BROKER_HOST=192.168.128.137
+      - EVENT_BROKER_PORT=5044
+    depends_on:
+      - redis
+
+  worker:
+    build:
+      context: ../../app
+      dockerfile: Dockerfile
+    command: taskiq worker broker:broker tasks --workers 4
+    volumes:
+      - /storage/test:/mnt
+    environment:
+      - REDIS_URL=redis://redis:6379/0
+    depends_on:
+      - redis
+    deploy:
+      replicas: 2

@@ -1,0 +1,83 @@
+{
+  "mappings": {
+    "properties": {
+      "@timestamp": {
+        "type": "date"
+      },
+      "timestamp_desc": {
+        "type": "text",
+        "fields": {
+          "keyword": {
+            "type": "keyword"
+          }
+        }
+      },
+      "data_type": {
+        "type": "text",
+        "fields": {
+          "keyword": {
+            "type": "keyword"
+          }
+        }
+      },
+      "EventID": {
+        "type": "long"
+      },
+      "value": {
+        "type": "text",
+        "fields": {
+          "keyword": {
+            "type": "keyword"
+          }
+        }
+      }
+    },
+    "dynamic_templates": [
+      {
+        "dates": {
+          "match_mapping_type": "date",
+          "mapping": {
+            "type": "date"
+          }
+        }
+      },
+      {
+        "strings": {
+          "match_mapping_type": "string",
+          "mapping": {
+            "type": "text",
+            "fields": {
+              "keyword": {
+                "type": "keyword",
+                "ignore_above": 32766
+              }
+            }
+          }
+        }
+      },
+      {
+        "longs": {
+          "match_mapping_type": "long",
+          "mapping": {
+            "type": "long"
+          }
+        }
+      },
+      {
+        "object": {
+          "match_mapping_type": "object",
+          "mapping": {
+            "type": "object"
+          }
+        }
+      }
+    ]
+  },
+  "settings": {
+    "mapping": {
+      "total_fields": {
+        "limit": 20000
+      }
+    }
+  }
+}

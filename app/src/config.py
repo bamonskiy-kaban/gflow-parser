@@ -1,0 +1,7 @@
+import os
+
+REDIS_URL = os.getenv("REDIS_URL")
+OPENSEARCH_HOST = os.getenv("OPENSEARCH_HOST")
+OPENSEARCH_PORT = int(os.getenv("OPENSEARCH_PORT", 0))
+EVENT_BROKER_HOST = os.getenv("EVENT_BROKER_HOST")
+EVENT_BROKER_PORT = int(os.getenv("EVENT_BROKER_PORT", 0))

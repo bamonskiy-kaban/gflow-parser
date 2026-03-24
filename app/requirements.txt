@@ -1,0 +1,8 @@
+dissect>=3.22
+fastapi>=0.135.2
+opensearch-py>=3.1.0
+orjson>=3.11.7
+redis>=7.4.0
+taskiq>=0.12.1
+taskiq-redis>=1.2.2
+uvicorn>=0.42.0
