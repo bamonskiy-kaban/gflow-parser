@@ -40,8 +40,6 @@ services:
       - AMQP_URL=amqp://taskiq:taskiq@rabbitmq:5672/
       - OPENSEARCH_HOST=192.168.128.137
       - OPENSEARCH_PORT=9200
-      - EVENT_BROKER_HOST=192.168.128.137
-      - EVENT_BROKER_PORT=5044
     depends_on:
       rabbitmq:
         condition: service_healthy
@@ -58,6 +56,8 @@ services:
     environment:
       - POSTGRES_URL=postgresql://taskiq:taskiq@postgres:5432/db
       - AMQP_URL=amqp://taskiq:taskiq@rabbitmq:5672/
+      - EVENT_BROKER_HOST=192.168.128.137
+      - EVENT_BROKER_PORT=5044
     depends_on:
       rabbitmq:
         condition: service_healthy
