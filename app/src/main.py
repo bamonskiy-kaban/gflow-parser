@@ -50,7 +50,7 @@ async def create_evidence(request: EvidencePostRequest, db: Session = Depends(ge
         raise HTTPException(400, "No such file")
 
     if not file_path.endswith(".tar"):
-        return HTTPException(400, "Supported .TAR only")
+        raise HTTPException(400, "Supported .TAR only")
 
     try:
         target_info = get_target_info(file_path)
