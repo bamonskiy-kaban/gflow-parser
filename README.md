@@ -1,5 +1,6 @@
 # TMP README
 ## Тестовый запуск с локальным хранилищем
+
 ### 1. Клон репы
 ```commandline
 git clone https://github.com/bamonskiy-kaban/gflow
@@ -11,10 +12,21 @@ cd gflow/docker/test
 cp example.env .env
 ```
 
-В файле .env установить значение переменной окружения `LOCAL_TARGETS_DIR` - указать директорию, в которой хранятся триаж-копии
+В файле .env установить значение переменных окружения:
+- LOGSTASH_HOST - хост, на котором развернут Logstash
+- OPENSEARCH_HOST - хост, на котором развернут OpenSearch
+- LOCAL_TARGETS_DIR - директория с триажами
 
 ### 3. Запуск 
+Запуск ELK-стека
 ```commandline
+cd docker/e2e/elk
+docker-compose up -d
+```
+
+Запуск приложения
+```commandline
+cd docker/test/
 docker-compose up --build
 ```
 
@@ -48,3 +60,8 @@ curl -X POST http://localhost:8000/evidence -H 'Content-Type: application/json' 
 ```
 Данный запрос вернет идентификатор триажа, взятого в работу.
 Префикс - произвольная строка. Результаты парсинга сохраняются в OpenSearch в индекс, имя которого соответствует правилу <prefix>-<evidence_id>.
+
+Для получения результатов рекомендуется использовать скрипт `test.py`, запуская его следующим образом:
+```commandline
+python3 test.py <evidence_id>
+```

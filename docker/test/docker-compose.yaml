@@ -29,14 +29,14 @@ services:
       dockerfile: Dockerfile
     command: uvicorn main:app --host 0.0.0.0 --port 8000
     volumes:
-      - /storage/test:/targets
+      - ${LOCAL_TARGETS_DIR}:/targets
     ports:
       - "8000:8000"
     environment:
       - API_DB_POSTGRES_URL=postgresql+psycopg://user:password@postgres:5432/gflow_db
       - BACKEND_POSTGRES_URL=postgresql://user:password@postgres:5432/gflow_db
       - REDIS_URL=redis://redis:6379/0
-      - OPENSEARCH_HOST=192.168.128.137
+      - OPENSEARCH_HOST=${OPENSEARCH_HOST}
       - OPENSEARCH_PORT=9200
     depends_on:
       redis:
@@ -52,11 +52,11 @@ services:
     # max tasks is 1 to avoid dissect memleak related to tar container processing
     command: taskiq worker broker:broker tasks --workers 4 --max-async-tasks 1 --max-tasks-per-child 1 --ack-type when_received --max-prefetch 1
     volumes:
-      - /storage/test:/targets
+      - ${LOCAL_TARGETS_DIR}:/targets
     environment:
       - BACKEND_POSTGRES_URL=postgresql://user:password@postgres:5432/gflow_db
       - REDIS_URL=redis://redis:6379/0
-      - EVENT_BROKER_HOST=192.168.128.137
+      - EVENT_BROKER_HOST=${LOGSTASH_HOST}
       - EVENT_BROKER_PORT=5044
     depends_on:
       redis:

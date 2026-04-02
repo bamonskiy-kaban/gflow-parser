@@ -68,7 +68,6 @@ services:
 volumes:
   opensearch_data:
   dashboards_data:
-  dfir_artifacts:
 
 networks:
   dfir-net:
