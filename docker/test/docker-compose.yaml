@@ -36,8 +36,6 @@ services:
       - API_DB_POSTGRES_URL=postgresql+psycopg://user:password@postgres:5432/gflow_db
       - BACKEND_POSTGRES_URL=postgresql://user:password@postgres:5432/gflow_db
       - REDIS_URL=redis://redis:6379/0
-      - OPENSEARCH_HOST=${OPENSEARCH_HOST}
-      - OPENSEARCH_PORT=9200
     depends_on:
       redis:
         condition: service_started

@@ -16,7 +16,7 @@ from config import API_TARGETS_DIR, FUNCTIONS
 from tasks import process_function
 from database import SessionLocal, engine
 from sqlalchemy.orm import Session
-from helpers import create_index, get_target_info
+from helpers import get_target_info, validate_index
 
 import uuid
 import datetime
@@ -54,6 +54,9 @@ async def create_evidence(request: EvidencePostRequest, db: Session = Depends(ge
     if not file_path.endswith(".tar"):
         raise HTTPException(400, "Supported .TAR only")
 
+    if not validate_index(request.index):
+        raise HTTPException(400, "Invalid index name")
+
     try:
         target_info = get_target_info(file_path)
 
@@ -61,22 +64,16 @@ async def create_evidence(request: EvidencePostRequest, db: Session = Depends(ge
         raise HTTPException(500, f"Evidence handling error: {str(e)}")
 
     evidence_id = uuid.uuid4().hex
-    evidence_uid = f"{request.prefix}-{evidence_id}"
     functions = FUNCTIONS.get(target_info.os)
 
     if not functions:
         raise HTTPException(400, f"No functions for target [{request.relative_file_path}]. OS: [{target_info.os}]")
 
-    try:
-        await create_index(evidence_uid)
-    except Exception as e:
-        raise HTTPException(500, f"Unable to create OpenSearch index [{evidence_uid}]: {str(e)}")
-
     evidence = Evidence(
         evidence_id=evidence_id,
         hostname=target_info.hostname,
         domain=target_info.domain,
-        prefix=request.prefix,
+        index=request.index,
         storage_path=file_path,
         os=target_info.os,
         os_version=target_info.version,
@@ -87,7 +84,7 @@ async def create_evidence(request: EvidencePostRequest, db: Session = Depends(ge
 
     tasks = []
     for function in functions:
-        task = await process_function.kiq(evidence_uid, file_path, function)
+        task = await process_function.kiq(request.index, evidence_id, file_path, function)
         tasks.append(
             Task(
                 task_id=task.task_id,

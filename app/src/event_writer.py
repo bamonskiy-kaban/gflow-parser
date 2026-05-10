@@ -1,20 +1,13 @@
 from contextlib import AbstractAsyncContextManager
 from typing import Optional
 
-import abc
 import logging
 import asyncio
 
 logger = logging.getLogger(__name__)
 
 
-class AbstractAsyncEventWriter(AbstractAsyncContextManager):
-    @abc.abstractmethod
-    async def write_event(self, event_bytes):
-        pass
-
-
-class AsyncTcpEventWriter(AbstractAsyncEventWriter):
+class AsyncTcpEventWriter(AbstractAsyncContextManager):
     def __init__(self,
                  broker_host: str,
                  broker_port: int,

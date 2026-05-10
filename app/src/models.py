@@ -25,7 +25,7 @@ class TaskResult(BaseModel):
 
 
 class EvidencePostRequest(BaseModel):
-    prefix: str
+    index: str
     relative_file_path: str
 
 
@@ -46,7 +46,7 @@ class Evidence(Base):
     evidence_id: Mapped[String] = mapped_column(String, nullable=False, primary_key=True)
     hostname: Mapped[String] = mapped_column(String, nullable=False)
     domain: Mapped[String] = mapped_column(String, nullable=True)
-    prefix: Mapped[String] = mapped_column(String, nullable=False)
+    index: Mapped[String] = mapped_column(String, nullable=False)
     storage_path: Mapped[String] = mapped_column(String, nullable=False)
     os: Mapped[String] = mapped_column(String, nullable=False)
     os_version: Mapped[String] = mapped_column(String, nullable=True)
