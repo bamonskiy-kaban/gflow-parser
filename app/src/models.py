@@ -31,7 +31,7 @@ class EvidencePostRequest(BaseModel):
 
 class EvidenceResponse(BaseModel):
     evidence_id: str
-    prefix: str
+    index: str
     hostname: str
     domain: Optional[str]
     os: str

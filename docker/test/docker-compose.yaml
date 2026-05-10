@@ -54,7 +54,7 @@ services:
     environment:
       - BACKEND_POSTGRES_URL=postgresql://user:password@postgres:5432/gflow_db
       - REDIS_URL=redis://redis:6379/0
-      - EVENT_BROKER_HOST=${LOGSTASH_HOST}
+      - EVENT_BROKER_HOST=192.168.128.137
       - EVENT_BROKER_PORT=5044
     depends_on:
       redis:

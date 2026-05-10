@@ -112,7 +112,7 @@ async def get_evidence(evidence_id: str, db: Session = Depends(get_db)):
 
     return EvidenceResponse(
         evidence_id=evidence.evidence_id,
-        prefix=evidence.prefix,
+        index=evidence.index,
         hostname=evidence.hostname,
         domain=evidence.domain,
         os=evidence.os,
