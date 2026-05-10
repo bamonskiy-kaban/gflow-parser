@@ -7,10 +7,8 @@ dependencies = [
     "dissect>=3.22",
     "fastapi>=0.135.2",
     "orjson>=3.11.7",
-    "psycopg[binary]>=3.3.3",
-    "sqlalchemy>=2.0.48",
+    "pydantic>=2.12.5",
     "taskiq>=0.12.1",
-    "taskiq-postgres[psycopg]>=0.7.0",
     "taskiq-redis>=1.2.2",
     "uvicorn>=0.42.0",
 ]

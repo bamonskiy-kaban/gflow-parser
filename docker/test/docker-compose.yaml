@@ -7,22 +7,6 @@ services:
       - "6379:6379"
     command: redis-server --save 60 1 --loglevel notice
 
-  postgres:
-    image: postgres:16
-    restart: unless-stopped
-    environment:
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: gflow_db
-    ports:
-      - "5432:5432"
-
-    healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U user -d gflow_db" ]
-      interval: 5s
-      timeout: 5s
-      retries: 3
-
   api:
     build:
       context: ../../app
@@ -33,31 +17,24 @@ services:
     ports:
       - "8000:8000"
     environment:
-      - API_DB_POSTGRES_URL=postgresql+psycopg://user:password@postgres:5432/gflow_db
-      - BACKEND_POSTGRES_URL=postgresql://user:password@postgres:5432/gflow_db
-      - REDIS_URL=redis://redis:6379/0
+      - REDIS_URL=redis://redis:6379/
     depends_on:
       redis:
         condition: service_started
-      postgres:
-        condition: service_healthy
 
   worker:
     build:
       context: ../../app
       dockerfile: Dockerfile
 
-    # max tasks is 1 to avoid dissect memleak related to tar container processing
+    # max tasks per child is 1 to avoid dissect memleak related to tar container processing
     command: taskiq worker broker:broker tasks --workers 4 --max-async-tasks 1 --max-tasks-per-child 1 --ack-type when_received --max-prefetch 1
     volumes:
       - ${LOCAL_TARGETS_DIR}:/targets
     environment:
-      - BACKEND_POSTGRES_URL=postgresql://user:password@postgres:5432/gflow_db
-      - REDIS_URL=redis://redis:6379/0
-      - EVENT_BROKER_HOST=192.168.128.137
-      - EVENT_BROKER_PORT=5044
+      - REDIS_URL=redis://redis:6379/
+      - EVENT_BROKER_HOST=${EVENT_BROKER_HOST}
+      - EVENT_BROKER_PORT=${EVENT_BROKER_PORT}
     depends_on:
       redis:
         condition: service_started
-      postgres:
-        condition: service_healthy

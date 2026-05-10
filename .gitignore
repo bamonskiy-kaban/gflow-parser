@@ -218,3 +218,4 @@ __marimo__/
 worker/flow_worker/test_data/
 worker/flow_worker/cache_dir/
 __tmp/
+app/requirements.txt

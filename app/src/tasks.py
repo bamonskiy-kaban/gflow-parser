@@ -25,9 +25,10 @@ class InvalidBrokerConfigException(Exception):
 
 
 class EvidenceJsonRecordPacker:
-    def __init__(self, evidence_id: str, index: str):
-        self.evidence_id = evidence_id
+    def __init__(self, processing_id: str, index: str, function_name: str):
+        self.processing_id = processing_id
         self.index = index
+        self.function_name = function_name
 
     def pack_obj(self, obj: Any):
         if isinstance(obj, Record):
@@ -41,8 +42,9 @@ class EvidenceJsonRecordPacker:
                 if field_type == "boolean" and isinstance(serial[field_name], int):
                     serial[field_name] = bool(serial[field_name])
 
-            serial["evidence_id"] = self.evidence_id
+            serial["processing_id"] = self.processing_id
             serial["idx"] = self.index
+            serial["function_name"] = self.function_name
 
             return serial
         if isinstance(obj, RecordDescriptor):
@@ -78,15 +80,15 @@ class EvidenceJsonRecordPacker:
 
 @broker.task
 async def process_function(index: str,
-                           evidence_id: str,
+                           processing_id: str,
                            relative_path: str,
                            function_name: str) -> Dict:
     logger.info(
-        f"Function [{function_name}] execution initialized for evidence [{evidence_id}]. Target [{relative_path}]")
+        f"Function [{function_name}] execution initialized for processing [{processing_id}]. Target [{relative_path}]")
 
     result_dict = {
         "records": 0,
-        "processing_error": None
+        "processing_error": ""
     }
 
     tcp_event_broker_host = EVENT_BROKER_HOST
@@ -102,10 +104,10 @@ async def process_function(index: str,
     _, function = target.get_function(function_name)
 
     count = 0
-    record_packer = EvidenceJsonRecordPacker(evidence_id, index)
+    record_packer = EvidenceJsonRecordPacker(processing_id, index, function_name)
 
     logger.info(
-        f"Started function [{function_name}] execution for evidence [{evidence_id}]. Target full path: [{target_path}]")
+        f"Started function [{function_name}] execution for evidence [{processing_id}]. Target full path: [{target_path}]")
 
     try:
         async with AsyncTcpEventWriter(tcp_event_broker_host, tcp_event_broker_port) as event_writer:
@@ -121,6 +123,6 @@ async def process_function(index: str,
 
     finally:
         logger.info(
-            f"Processing completed. Target info - Evidence UID: [{evidence_id}] | Target path: [{target_path}] | Function: [{function_name}] | Records: [{count}]")
+            f"Processing completed. Target info - Evidence UID: [{processing_id}] | Target path: [{target_path}] | Function: [{function_name}] | Records: [{count}]")
         result_dict["records"] = count
         return result_dict
