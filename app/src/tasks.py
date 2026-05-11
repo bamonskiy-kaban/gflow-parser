@@ -123,6 +123,6 @@ async def process_function(index: str,
 
     finally:
         logger.info(
-            f"Processing completed. Target info - Evidence UID: [{processing_id}] | Target path: [{target_path}] | Function: [{function_name}] | Records: [{count}]")
+            f"Processing completed. Target info - Processing ID: [{processing_id}] | Target path: [{target_path}] | Function: [{function_name}] | Records: [{count}]")
         result_dict["records"] = count
         return result_dict
