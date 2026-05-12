@@ -1,5 +1,6 @@
 from contextlib import AbstractAsyncContextManager
 from typing import Optional
+from datetime import datetime
 
 import logging
 import asyncio
@@ -7,17 +8,72 @@ import asyncio
 logger = logging.getLogger(__name__)
 
 
+class EvidenceJsonRecordPacker:
+    def __init__(self, processing_id: str, index: str, function_name: str):
+        self.meta = {
+            "processing_id": processing_id,
+            "index": index,
+            "function_name": function_name
+        }
+
+    def pack_obj(self, obj: Any):
+        if isinstance(obj, Record):
+            serial = obj._asdict()
+
+            serial["_type"] = "record"
+            serial["_recorddescriptor"] = obj._desc.identifier
+
+            for field_type, field_name in obj._desc.get_field_tuples():
+                # Boolean field types should be cast to a bool instead of staying ints
+                if field_type == "boolean" and isinstance(serial[field_name], int):
+                    serial[field_name] = bool(serial[field_name])
+
+            serial["meta"] = self.meta
+
+            return serial
+        if isinstance(obj, RecordDescriptor):
+            return {
+                "_type": "recorddescriptor",
+                "_data": obj._pack(),
+            }
+        if isinstance(obj, datetime):
+            return obj.isoformat()
+        if isinstance(obj, fieldtypes.digest):
+            return {
+                "md5": obj.md5,
+                "sha1": obj.sha1,
+                "sha256": obj.sha256,
+            }
+        if isinstance(obj, (fieldtypes.net.ipaddress, fieldtypes.net.ipnetwork, fieldtypes.net.ipinterface)):
+            return str(obj)
+        if isinstance(obj, bytes):
+            return base64.b64encode(obj).decode()
+        if isinstance(obj, fieldtypes.path):
+            return str(obj)
+        if isinstance(obj, fieldtypes.command):
+            return {
+                "executable": obj.executable,
+                "args": obj.args,
+            }
+
+        raise TypeError(f"Unpackable type {type(obj)}")
+
+    def pack(self, obj: Any):
+        return orjson.dumps(obj, default=self.pack_obj)
+
+
+
 class AsyncTcpEventWriter(AbstractAsyncContextManager):
     def __init__(self,
                  broker_host: str,
                  broker_port: int,
-                 buffer_size: int = 10000,
-                 max_queue_size: int = 50000,
+                 batch_max_size: int = 1000,
+                 max_queue_size: int = 20000,
                  retry_delay: int = 2
                  ):
         self.broker_host = broker_host
         self.broker_port = broker_port
-        self.buffer_size = buffer_size
+        self.batch_max_size = batch_max_size
         self.retry_delay = retry_delay
 
         self._queue = asyncio.Queue(maxsize=max_queue_size)
@@ -32,32 +88,22 @@ class AsyncTcpEventWriter(AbstractAsyncContextManager):
             _, self._writer = await asyncio.open_connection(self.broker_host, self.broker_port)
 
     async def _flush_worker(self):
-        chunk = bytearray()
-        events_count = 0
-
         try:
-            while True:
+            while not (self._is_closing and self._queue.empty()):
                 try:
-                    event_bytes = await asyncio.wait_for(self._queue.get(), timeout=1.0)
-                    chunk.extend(event_bytes)
-                    chunk.append(10)
-                    events_count += 1
-
-                    if events_count >= self.buffer_size:
-                        await self._send_chunk_with_retry(chunk)
-                        for _ in range(events_count): self._queue.task_done()
-                        chunk = bytearray()
-                        events_count = 0
-
+                    first_event = await asyncio.wait_for(self._queue.get(), timeout=1.0)
                 except asyncio.TimeoutError:
-                    if events_count > 0:
-                        await self._send_chunk_with_retry(chunk)
-                        for _ in range(events_count): self._queue.task_done()
-                        chunk = bytearray()
-                        events_count = 0
+                    continue
 
-                    if self._is_closing and self._queue.empty():
-                        break
+                batch = [first_event]
+                try:
+                    while len(batch) < self.batch_max_size:
+                        batch.append(self._queue.get_nowait())
+                except asyncio.QueueEmpty:
+                    pass
+                chunk = b'\n'.join(batch) + b'\n'
+                await self._send_chunk_with_retry(chunk)
+                for _ in range(len(batch)): self._queue.task_done()
 
         except Exception as e:
             logger.critical(f"Fatal error in flush worker: [{e}]", exc_info=True)

@@ -26,9 +26,11 @@ class InvalidBrokerConfigException(Exception):
 
 class EvidenceJsonRecordPacker:
     def __init__(self, processing_id: str, index: str, function_name: str):
-        self.processing_id = processing_id
-        self.index = index
-        self.function_name = function_name
+        self.meta = {
+            "processing_id": processing_id,
+            "index": index,
+            "function_name": function_name
+        }
 
     def pack_obj(self, obj: Any):
         if isinstance(obj, Record):
@@ -42,9 +44,7 @@ class EvidenceJsonRecordPacker:
                 if field_type == "boolean" and isinstance(serial[field_name], int):
                     serial[field_name] = bool(serial[field_name])
 
-            serial["processing_id"] = self.processing_id
-            serial["idx"] = self.index
-            serial["function_name"] = self.function_name
+            serial["meta"] = self.meta
 
             return serial
         if isinstance(obj, RecordDescriptor):
