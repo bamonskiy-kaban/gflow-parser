@@ -1,4 +1,5 @@
 from contextlib import AbstractAsyncContextManager
+from datetime import datetime
 from typing import Optional
 
 import logging
@@ -11,8 +12,8 @@ class AsyncTcpEventWriter(AbstractAsyncContextManager):
     def __init__(self,
                  broker_host: str,
                  broker_port: int,
-                 batch_max_size: int = 1000,
-                 max_queue_size: int = 20000,
+                 batch_max_size: int = 16000,
+                 max_queue_size: int = 220000,
                  retry_delay: int = 2
                  ):
         self.broker_host = broker_host
@@ -45,7 +46,7 @@ class AsyncTcpEventWriter(AbstractAsyncContextManager):
                         batch.append(self._queue.get_nowait())
                 except asyncio.QueueEmpty:
                     pass
-                chunk = b'\n'.join(batch) + b'\n'
+                chunk = b''.join(batch)
                 await self._send_chunk_with_retry(chunk)
                 for _ in range(len(batch)): self._queue.task_done()
 
@@ -55,9 +56,9 @@ class AsyncTcpEventWriter(AbstractAsyncContextManager):
     async def _send_chunk_with_retry(self, chunk: bytearray):
         while True:
             try:
-                await self._connect()
-                self._writer.write(chunk)
-                await self._writer.drain()
+                # await self._connect()
+                # self._writer.write(chunk)
+                # await self._writer.drain()
                 break
 
             except Exception as e:
