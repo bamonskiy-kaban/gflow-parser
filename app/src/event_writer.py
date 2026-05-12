@@ -1,66 +1,10 @@
 from contextlib import AbstractAsyncContextManager
 from typing import Optional
-from datetime import datetime
 
 import logging
 import asyncio
 
 logger = logging.getLogger(__name__)
-
-
-class EvidenceJsonRecordPacker:
-    def __init__(self, processing_id: str, index: str, function_name: str):
-        self.meta = {
-            "processing_id": processing_id,
-            "index": index,
-            "function_name": function_name
-        }
-
-    def pack_obj(self, obj: Any):
-        if isinstance(obj, Record):
-            serial = obj._asdict()
-
-            serial["_type"] = "record"
-            serial["_recorddescriptor"] = obj._desc.identifier
-
-            for field_type, field_name in obj._desc.get_field_tuples():
-                # Boolean field types should be cast to a bool instead of staying ints
-                if field_type == "boolean" and isinstance(serial[field_name], int):
-                    serial[field_name] = bool(serial[field_name])
-
-            serial["meta"] = self.meta
-
-            return serial
-        if isinstance(obj, RecordDescriptor):
-            return {
-                "_type": "recorddescriptor",
-                "_data": obj._pack(),
-            }
-        if isinstance(obj, datetime):
-            return obj.isoformat()
-        if isinstance(obj, fieldtypes.digest):
-            return {
-                "md5": obj.md5,
-                "sha1": obj.sha1,
-                "sha256": obj.sha256,
-            }
-        if isinstance(obj, (fieldtypes.net.ipaddress, fieldtypes.net.ipnetwork, fieldtypes.net.ipinterface)):
-            return str(obj)
-        if isinstance(obj, bytes):
-            return base64.b64encode(obj).decode()
-        if isinstance(obj, fieldtypes.path):
-            return str(obj)
-        if isinstance(obj, fieldtypes.command):
-            return {
-                "executable": obj.executable,
-                "args": obj.args,
-            }
-
-        raise TypeError(f"Unpackable type {type(obj)}")
-
-    def pack(self, obj: Any):
-        return orjson.dumps(obj, default=self.pack_obj)
-
 
 
 class AsyncTcpEventWriter(AbstractAsyncContextManager):
