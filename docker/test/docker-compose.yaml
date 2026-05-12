@@ -28,7 +28,7 @@ services:
       dockerfile: Dockerfile
 
     # max tasks per child is 1 to avoid dissect memleak related to tar container processing
-    command: taskiq worker broker:broker tasks --workers 4 --max-async-tasks 1 --max-tasks-per-child 1 --ack-type when_received --max-prefetch 1
+    command: taskiq worker broker:broker tasks --workers 8 --max-async-tasks 1 --max-tasks-per-child 1 --ack-type when_received --max-prefetch 1
     volumes:
       - ${LOCAL_TARGETS_DIR}:/targets
     environment:

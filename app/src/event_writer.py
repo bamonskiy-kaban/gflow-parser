@@ -13,7 +13,7 @@ class AsyncTcpEventWriter(AbstractAsyncContextManager):
                  broker_host: str,
                  broker_port: int,
                  batch_max_size: int = 16000,
-                 max_queue_size: int = 220000,
+                 max_queue_size: int = 200000,
                  retry_delay: int = 2
                  ):
         self.broker_host = broker_host
@@ -56,9 +56,9 @@ class AsyncTcpEventWriter(AbstractAsyncContextManager):
     async def _send_chunk_with_retry(self, chunk: bytearray):
         while True:
             try:
-                # await self._connect()
-                # self._writer.write(chunk)
-                # await self._writer.drain()
+                await self._connect()
+                self._writer.write(chunk)
+                await self._writer.drain()
                 break
 
             except Exception as e:
