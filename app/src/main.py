@@ -69,7 +69,7 @@ async def run_target_processing(request: TargetProcessingRequest):
 
     tasks = []
     for function in functions:
-        task = await process_function.kiq(request.index, file_path, function)
+        task = await process_function.kiq(request.processing_id, file_path, function)
         tasks.append(
             TaskDescriptor(
                 task_id=task.task_id,

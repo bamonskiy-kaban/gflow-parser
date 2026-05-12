@@ -28,6 +28,6 @@ class TaskDescriptor(BaseModel):
 
 
 class TargetProcessingRequest(BaseModel):
-    index: str
+    processing_id: str
     functions_preset: str
     relative_target_path: str

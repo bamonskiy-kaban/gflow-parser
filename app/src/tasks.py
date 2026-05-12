@@ -23,11 +23,11 @@ class InvalidBrokerConfigException(Exception):
 
 
 @broker.task
-async def process_function(index: str,
+async def process_function(processing_id: str,
                            relative_path: str,
                            function_name: str) -> Dict:
     logger.info(
-        f"Function [{function_name}] execution initialized for processing index [{index}]. Target [{relative_path}]")
+        f"Function [{function_name}] execution initialized for Processing ID [{processing_id}]. Target [{relative_path}]")
 
     result_dict = {
         "records": 0,
@@ -47,10 +47,10 @@ async def process_function(index: str,
     _, function = target.get_function(function_name)
 
     count = 0
-    record_packer = JsonRecordPackerWrapper(index, function_name)
+    record_packer = JsonRecordPackerWrapper(processing_id, function_name)
 
     logger.info(
-        f"Started function [{function_name}] execution for index [{index}]. Target full path: [{target_path}]")
+        f"Started function [{function_name}] execution for Processing ID [{processing_id}]. Target full path: [{target_path}]")
 
     try:
         async with AsyncTcpEventWriter(tcp_event_broker_host, tcp_event_broker_port) as event_writer:
@@ -69,6 +69,6 @@ async def process_function(index: str,
 
     finally:
         logger.info(
-            f"Processing completed. Target info - Index: [{index}] | Target path: [{target_path}] | Function: [{function_name}] | Records: [{count}]")
+            f"Processing completed. Target info - Processing ID: [{processing_id}] | Target path: [{target_path}] | Function: [{function_name}] | Records: [{count}]")
         result_dict["records"] = count
         return result_dict
