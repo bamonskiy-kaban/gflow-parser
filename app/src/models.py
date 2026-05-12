@@ -27,11 +27,6 @@ class TaskDescriptor(BaseModel):
     function_name: str
 
 
-class TargetProcessingDescriptor(BaseModel):
-    processing_id: str
-    tasks: List[TaskDescriptor]
-
-
 class TargetProcessingRequest(BaseModel):
     index: str
     functions_preset: str

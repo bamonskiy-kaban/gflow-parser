@@ -1,21 +1,20 @@
 from fastapi import FastAPI, HTTPException
 
+from broker import broker
 from models import (
     TargetProcessingRequest,
-    TargetProcessingDescriptor,
     TaskResult,
     TaskDescriptor,
     TargetInfo,
     TargetInfoRequest
 )
 
-from broker import broker
+from typing import List
 from dissect.target.target import Target
 from config import API_TARGETS_DIR, FUNCTIONS
 
 from tasks import process_function
 
-import uuid
 import os
 
 
@@ -53,7 +52,7 @@ async def get_target_info(request: TargetInfoRequest):
     return acquire_target_info(target_path)
 
 
-@app.post("/process_target", response_model=TargetProcessingDescriptor)
+@app.post("/process_target", response_model=List[TaskDescriptor])
 async def run_target_processing(request: TargetProcessingRequest):
     file_path = os.path.join(API_TARGETS_DIR, request.relative_target_path)
 
@@ -63,16 +62,14 @@ async def run_target_processing(request: TargetProcessingRequest):
     if not file_path.endswith(".tar"):
         raise HTTPException(400, "Supported .TAR only")
 
-    processing_id = uuid.uuid4().hex
     functions = FUNCTIONS.get(request.functions_preset)
-
     if not functions:
         raise HTTPException(400,
                             f"No functions for target [{request.relative_target_path}]. Functions preset: [{request.functions_preset}]")
 
     tasks = []
     for function in functions:
-        task = await process_function.kiq(request.index, processing_id, file_path, function)
+        task = await process_function.kiq(request.index, file_path, function)
         tasks.append(
             TaskDescriptor(
                 task_id=task.task_id,
@@ -80,10 +77,7 @@ async def run_target_processing(request: TargetProcessingRequest):
             )
         )
 
-    return TargetProcessingDescriptor(
-        processing_id=processing_id,
-        tasks=tasks
-    )
+    return tasks
 
 
 @app.get("/task/{task_id}", response_model=TaskResult)

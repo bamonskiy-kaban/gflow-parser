@@ -5,9 +5,8 @@ import orjson
 
 
 class JsonRecordPackerWrapper:
-    def __init__(self, processing_id: str, index: str, function_name: str):
+    def __init__(self, index: str, function_name: str):
         self.meta = {
-            "processing_id": processing_id,
             "index": index,
             "function_name": function_name
         }
