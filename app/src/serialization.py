@@ -1,4 +1,4 @@
-from flow.record import Record, JsonRecordPacker
+from flow.record import Record, JsonRecordPacker, fieldtypes
 from typing import Any
 
 import orjson
@@ -12,8 +12,10 @@ class JsonRecordPackerWrapper:
         }
         self.packer = JsonRecordPacker()
 
-    # TODO: fix fieldtypes.command type serialization
     def pack_obj(self, obj: Any):
+        if isinstance(obj, fieldtypes.command):
+            return f"{obj.executable} {' '.join(obj.args)}"
+
         result = self.packer.pack_obj(obj)
         if isinstance(obj, Record):
             result["meta"] = self.meta
